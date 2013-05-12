@@ -1,0 +1,7 @@
+key 231   CALL
+key 122   ENDCALL           WAKE
+key 248	  HEADSETHOOK         WAKE
+
+key 150   EXPLORER            WAKE
+key 163   MEDIA_NEXT          WAKE
+key 164   MEDIA_PLAY_PAUSE    WAKE
