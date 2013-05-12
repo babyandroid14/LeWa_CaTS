@@ -1,0 +1,227 @@
+#!/system/bin/sh
+#RTMixManager™2
+#developed by LENAROX.
+#this engine will solve any lags and crashes on games, heavy apps and so on.
+#which most of the mid-range android gamers have always wanted;)
+#rock your RAM Manager like a Windows NT!!!(da well known BOSS of RAM Management), you know what i mean.:p
+#ATTENTION!!! this engine requires the latest busybox version FROM stericson, installed to run properly.
+#reminder: this engine is designed to run in the background with the android ram management,
+#therefore it should NOT be used with other script applications.
+#thanks to many xda devs who have helped me to develop better codes.
+#this engine is based on 512mb RAM as a base and will begin to change values realtime(yeah, RT).
+#you can modify values with usrsettings to tune your device for your own needs.
+#you can always check which games are now playable through readme.txt!
+echo "RTMixManager™2";
+echo "developed by LENAROX.";
+echo "this engine will solve any lags and crashes on games, heavy apps and so on.";
+echo "which most of the mid-range android gamers have always wanted;)";
+echo "rock your RAM Manager like a Windows NT!!!(da well known BOSS of RAM Management), you know what i mean.:p";
+echo "ATTENTION!!! this engine requires the latest busybox version FROM stericson, installed to run properly.";
+echo "reminder: this engine is designed to run in the background with the android ram management,";
+echo "therefore it should NOT be used with other script applications.";
+echo "thanks to many xda devs who have helped me to develop better codes.";
+echo "this engine is based on 512mb RAM as a base and will begin to change values realtime(yeah, RT).";
+echo "you can modify values with usrsettings to tune your device for your own needs.";
+echo "you can always check which games are now playable through readme.txt!";
+#boot up tweaks.
+echo "====boot up filesystem(I/O) tweaks==============";
+#increase nr_requests to make I/O have more space to load up.
+echo "increasing nr_requests to make I/O have more space to load up...";
+for i in `find /sys -name nr_requests | grep mmcblk`;
+	do
+		echo 8192 > $i;
+	done
+#disable leases to gain faster access to the filesystem.
+VALUE2=`cat /system/etc/usrsettings | grep VALUE2 | awk '{print $2}' | sed -n 1p`;
+LEASES=`cat /proc/sys/fs/leases-enable`;
+if [ $VALUE2 == 0 ];
+	then
+		echo "skipped disable leases to gain faster access to the filesystem.";
+elif [ $VALUE2 == 1 ];
+	then
+		echo "disabling leases to gain faster access to the filesystem...";
+		if [ $LEASES != 0 ];
+			then
+				echo 0 > /proc/sys/fs/leases-enable;
+		fi;
+else
+	echo "a false value has been encountered in usrsettings.";
+fi;
+#increase touchscreen detection to sync every 90 frames per second.
+echo "increasing touchscreen detection to sync every 90 frames per second...";
+setprop ENFORCE_PROCESS_LIMIT false
+setprop windowsmgr.max_events_per_sec 90
+#RTMixManager™ Engine.
+echo "====RTMixManager™ Engine=========================";
+#start utilization.
+echo "gathering required information...";
+#Manual Out-Of-Memory Controller.
+VALUE4=`cat /system/etc/usrsettings | grep VALUE4 | awk '{print $2}' | sed -n 1p`;
+VALUE6=`cat /system/etc/usrsettings | grep VALUE6 | awk '{print $2}' | sed -n 1p`;
+MFK=`cat /proc/sys/vm/min_free_kbytes`;
+TOTALMEM=`free | awk '{ print $2 }' | sed -n 2p`;
+REALTOTALMEM=$(($TOTALMEM-$MFK));
+REALTOTALMB=$(($REALTOTALMEM/1024));
+#lowmem Mix-up Enhancement(NDPA) calculation.
+echo "calculating lowmem Mix-up Enhancement(NDPA)...";
+#for Dalvik Booster integrated.
+echo "calculating Dalvik VM parts...";
+agp=$(($REALTOTALMEM/6400));
+pgc=$(($agp-16));
+pgsc=$(($pgc-16));
+#for LMK Booster.
+echo "calculating minfree parts...";
+adp=$(($TOTALMEM/6400));
+acp=$(($adp*256));
+cps=$(($adp+16));
+dpsg=$(($cps*256));
+eps=$(($cps+16));
+fpsg=$(($eps*256));
+fdp=$fpsg;
+epsg=0;
+fps=$epsg;
+gp=$fps;
+hps=$gp;
+gps=15;
+hp=$gps;
+echo "applying calculated results...";
+#New Direct Process Assasinator(NDPA) method.
+if [ $VALUE4 -ge 1 -a $VALUE4 -le 14 -a $VALUE6 -ge 1 -a $VALUE6 -le 14 ];
+	then
+		if [ -e /sys/module/lowmemorykiller/parameters/adj ];
+			then
+				echo $epsg,$fps,$VALUE4,$VALUE6,$gps,$hp > /sys/module/lowmemorykiller/parameters/adj;
+		fi;
+else
+	echo "a false value has been encountered in usrsettings.";
+fi;
+#make cachelimit pressure on 3th minfree layer to avoid "not enough free space" lags.
+echo "making cachelimit pressure on 3th minfree layer to avoid not enough free space lags...";
+if [ -e /sys/module/lowmemorykiller/parameters/minfree ];
+	then
+		echo $hps,$gp,$acp,$dpsg,$fpsg,$fdp > /sys/module/lowmemorykiller/parameters/minfree;
+fi;
+#Dalvik Booster integrated.
+echo "====Dalvik Booster integrated===================";
+#transform Dalvik VM Compiler to act like Windows NT.
+echo "transforming Dalvik VM Compiler to act like Windows NT...";
+#verify all(default), optimize all, disable mapping, and finally, fuck dat uniprocessor.
+setprop dalvik.vm.dexopt-flags v=a,o=a
+VALUE1=`cat /system/etc/usrsettings | grep VALUE1 | awk '{print $2}' | sed -n 1p`;
+if [ $VALUE1 == 0 ];
+	then
+		echo "skipped Dalvik Booster.";
+elif [ $VALUE1 == 1 ];
+	then
+		echo "applying Dalvik Booster..."
+		setprop persist.sys.vm.heapsize "$agp"m
+		setprop dalvik.vm.heapsize "$agp"m
+		setprop dalvik.vm.heapgrowthlimit "$pgc"m
+		setprop dalvik.vm.heapstartsize "$pgsc"m
+else
+	echo "a false value has been encountered in usrsettings.";
+fi;
+#pre-calculated vm options(hardcoded).
+echo "applying pre-calculated vm options(hardcoded)...";
+#tuned to make a workaround for a traditional lazy periodic writeback, turning into a continuous writeback suitable for "No-sound stutter".
+#dirty_writeback_centisecs controller.
+WRITEBACK=`cat /proc/sys/vm/dirty_writeback_centisecs`;
+VALUE3=27640520
+if [ $WRITEBACK != $VALUE3 ];
+	then
+		echo $VALUE3 > /proc/sys/vm/dirty_writeback_centisecs;
+fi;
+#dirty_expire_centisecs controller.
+EXPIRE=`cat /proc/sys/vm/dirty_expire_centisecs`;
+VALUE4=0
+if [ $EXPIRE != $VALUE4 ];
+	then
+		echo $VALUE4 > /proc/sys/vm/dirty_expire_centisecs;
+fi;
+#dirty_ratio controller.
+DIRTY=`cat /proc/sys/vm/dirty_ratio`;
+VALUE5=95
+if [ $DIRTY != $VALUE5 ];
+	then
+		echo $VALUE5 > /proc/sys/vm/dirty_ratio;
+fi;
+#dirty_background_ratio controller.
+BACKGROUND=`cat /proc/sys/vm/dirty_background_ratio`;
+VALUE5=1
+if [ $BACKGROUND != $VALUE5 ];
+	then
+		echo $VALUE5 > /proc/sys/vm/dirty_background_ratio;
+fi;
+#RPEngine™ parts.
+echo "====RPEngine™ parts==============================";
+#live entropy Equalizer.
+echo "applying live entropy Equalizer...";
+WRITE=`cat /proc/sys/kernel/random/write_wakeup_threshold`;
+READ=`cat /proc/sys/kernel/random/read_wakeup_threshold`;
+ENTOTAL=`cat /proc/sys/kernel/random/poolsize`;
+if [ $WRITE != $ENTOTAL ];
+	then
+		echo $ENTOTAL > /proc/sys/kernel/random/write_wakeup_threshold;
+fi;
+if [ $READ != $ENTOTAL ];
+	then
+		echo $ENTOTAL > /proc/sys/kernel/random/read_wakeup_threshold;
+fi;
+#MPEngine™9.
+echo "====MPEngine™9===================================";
+echo "going inside the RAM Manager...";
+echo "if you're running this engine on terminal emulator, keep it running in the background.";
+
+(while true;
+	do
+		VALUE7=`cat /system/etc/usrsettings | grep VALUE7 | awk '{print $2}' | sed -n 1p`;
+		SKIP=$(($VALUE7/2));
+		MFK=`cat /proc/sys/vm/min_free_kbytes`;
+		FREEMEM=`free | awk '{ print $4 }' | sed -n 2p`;
+		CACHESIZE=`cat /proc/meminfo | grep Cached | awk '{print $2}' | sed -n 1p`;
+		TOTALMEM=`free | awk '{ print $2 }' | sed -n 2p`;
+		REALTOTALMEM=$(($TOTALMEM-$MFK));
+		MEMINUSE=$(($CACHESIZE+$FREEMEM));
+		VALUE8=`cat /system/etc/usrsettings | grep VALUE8 | awk '{print $2}' | sed -n 1p`;
+		VALUE9=`cat /system/etc/usrsettings | grep VALUE9 | awk '{print $2}' | sed -n 1p`;
+		DEADLINE=$(($REALTOTALMEM-$MEMINUSE));
+		DEADEND=$(($DEADLINE/$VALUE8));
+		DEADEND2=$(($DEADEND/$VALUE9));
+		if [ $FREEMEM -le $MFK ];
+			then
+				busybox sync; echo 1 > /proc/sys/vm/drop_caches;
+				sleep $SKIP;
+				busybox sync; echo 1 > /proc/sys/vm/drop_caches;
+				sleep $SKIP;
+				busybox sync; echo 1 > /proc/sys/vm/drop_caches;
+				sleep $SKIP;
+				busybox sync; echo 1 > /proc/sys/vm/drop_caches;
+				sleep $SKIP;
+		elif [ $FREEMEM -gt $MFK -a $FREEMEM -le $DEADEND2 ];
+			then
+				busybox sync; echo 1 > /proc/sys/vm/drop_caches;
+				sleep $SKIP;
+				busybox sync; echo 1 > /proc/sys/vm/drop_caches;
+				sleep $SKIP;
+		elif [ $FREEMEM -gt $DEADEND2 -a $FREEMEM -le $DEADEND ];
+			then
+				busybox sync; echo 1 > /proc/sys/vm/drop_caches;
+				sleep $VALUE7;
+		elif [ $FREEMEM -gt $DEADEND -a $FREEMEM -le $MEMINUSE ];
+			then
+				sleep $VALUE7;
+		else
+			sleep $VALUE7;
+		fi;
+	done &);
+
+echo "...";
+sleep 2;
+echo "partially done. Enjoy!;)";
+echo "you can always check which games are now playable through readme.txt!";
+echo "================================================";
+echo "go to http://forum.xda-developers.com/showthread.php?t=2076101 for more info.";
+echo "my e-mail: hoholee12@naver.com";
+
+#go to http://forum.xda-developers.com/showthread.php?t=2076101 for more info.
+#my e-mail: hoholee12@naver.com

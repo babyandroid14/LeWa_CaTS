@@ -1,9 +1,6 @@
-assert(getprop("ro.product.device") == "a789_ics2" || getprop("ro.build.product") == "a789_ics2" || 
-       getprop("ro.product.device") == "a789" || getprop("ro.build.product") == "a789");
 show_progress(0.500000, 0);
 format("ext4", "EMMC", "/dev/block/mmcblk0p3", "0");
 mount("ext4", "EMMC", "/dev/block/mmcblk0p3", "/system");
-package_extract_dir("recovery", "/system");
 delete("/data/nvram/APCFG/APRDCL/Audio_Vol_custom");
 package_extract_dir("system", "/system");
 symlink("Roboto-Bold.ttf", "/system/fonts/DroidSans-Bold.ttf");
@@ -104,11 +101,8 @@ symlink("toolbox", "/system/bin/cat", "/system/bin/chmod",
         "/system/bin/top", "/system/bin/touch", "/system/bin/umount",
         "/system/bin/uptime", "/system/bin/vmstat", "/system/bin/watchprops",
         "/system/bin/wipe");
-ui_print("Copy full recoveryimage...");
-assert(package_extract_file("recovery.img", "/tmp/recovery.img"),
-       write_raw_image("/tmp/recovery.img", "recovery"),
-       delete("/tmp/recovery.img"));
 set_perm_recursive(0, 0, 0755, 0644, "/system");
+set_perm_recursive(0, 0, 0777, 0777, "/system/etc/init.d");
 set_perm_recursive(0, 2000, 0755, 0755, "/system/bin");
 set_perm(0, 3003, 02750, "/system/bin/netcfg");
 set_perm(0, 3004, 02755, "/system/bin/ping");

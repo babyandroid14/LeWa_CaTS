@@ -15,8 +15,6 @@
 -->
 
 <!-- This is the standard set of features for devices that support the SIP API. -->
-<!-- Lenovo-sw huangxuan removed,2012-04-09
 <permissions>
     <feature name="android.software.sip" />
 </permissions>
--->

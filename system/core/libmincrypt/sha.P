@@ -1,4 +1,4 @@
-out/target/product/a789_ics2/obj/SHARED_LIBRARIES/libmincrypt_intermediates/../../../system/core/libmincrypt/sha.o: \
+out/target/product/u8836d_ics2/obj/SHARED_LIBRARIES/libmincrypt_intermediates/../../../system/core/libmincrypt/sha.o: \
  bootable/recovery/twmincrypt/../../../system/core/libmincrypt/sha.c \
  system/core/include/arch/linux-arm/AndroidConfig.h \
  system/core/include/arch/linux-arm/../mtkNonNDKConfig.h \
